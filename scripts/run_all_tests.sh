@@ -11,4 +11,8 @@ cd python && python3 test_runner.py && cd ..
 echo "Running C implementation tests..."
 cd c && make clean && make test && cd ..
 
+# 3. Run Go tests
+echo "Running Go implementation tests..."
+cd go && go run src/main.go src/aes.go src/rsa.go && cd ..
+
 echo "=== All Polyglot Tests Passed Successfully ==="
