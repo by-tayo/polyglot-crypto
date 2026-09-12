@@ -3,16 +3,24 @@ set -e
 
 echo "=== Running Polyglot Crypto Test Suite ==="
 
-# 1. Run Python tests
-echo "Running Python implementation tests..."
+# 1. Python
+echo "Running Python tests..."
 cd python && python3 test_runner.py && cd ..
 
-# 2. Run C tests
-echo "Running C implementation tests..."
+# 2. C
+echo "Running C tests..."
 cd c && make clean && make test && cd ..
 
-# 3. Run Go tests
-echo "Running Go implementation tests..."
+# 3. Go
+echo "Running Go tests..."
 cd go && go run src/main.go src/aes.go src/rsa.go && cd ..
 
-echo "=== All Polyglot Tests Passed Successfully ==="
+# 4. JavaScript
+echo "Running JavaScript tests..."
+cd javascript && node test_runner.js && cd ..
+
+# 5. Java
+echo "Running Java tests..."
+cd java && javac -d bin src/*.java && java -cp bin Main && rm -rf bin && cd ..
+
+echo "=== All 5 Polyglot Language Suites Passed Successfully ==="
