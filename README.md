@@ -1,118 +1,102 @@
 # Polyglot-Crypto: AES & RSA Implementations
 
-## Overview
-This repository provides a ground-up implementation of the Advanced Encryption Standard (AES) and Rivest-Shamir-Adleman (RSA) algorithms across five programming languages: Python, C, Go, Java, and JavaScript. The implementation supports core cryptographic operations without relying on external dependencies, providing insights into the algorithm's mechanics. 
+A zero-dependency, ground-up reference implementation of core cryptographic primitives (**AES-128** and **RSA**) engineered across **C (C99)**, **Python**, **Go**, **Java**, and **JavaScript**. Every algorithm operates strictly from scratch—avoiding external cryptography libraries—and guarantees cross-language parity via a shared JSON test vector harness.
+
+---
 
 ## Features
-* **AES Encryption/Decryption:** Contains helper functions for XOR operations, byte substitution, shifting rows, mixing columns, and key scheduling.
-* **RSA Encryption/Decryption:** Implements the three main stages of RSA: Key Generation, Encryption, and Decryption. 
-* **Polyglot Consistency:** Validates internal logic across all languages using a shared `test-vectors.json` file.
 
-## Prerequisites
-* **C:** GCC Compiler (`gcc` or `g++`)
-* **Python:** Python 3.x
-* **Go:** Go 1.18+
-* **Java:** JDK 21+
-* **JavaScript:** Node.js
+* **AES-128 (FIPS 197):** Full Substitution-Permutation Network (SPN) implementation including `SubBytes` (S-box over $\text{GF}(2^8)$), `ShiftRows`, `MixColumns` Galois field multiplication, and the 10-round key expansion schedule.
+* **RSA (PKCS #1):** Core integer factorization trapdoor operations implementing key generation, relation calculations, and square-and-multiply modular exponentiation for encryption and decryption.
+* **Polyglot Parity:** Automated cross-validation across all language environments using a shared, language-agnostic `shared/test-vectors.json` test suite.
 
-## Implementation Structure
+---
 
-### AES Base
-Defines core AES operations and serves as a base class/module for AES encryption and decryption implementations.
-* `SubBytes()`: Non-linear byte substitution.
-* `ShiftRows()`: Cyclical shifting of the state matrix.
-* `MixColumns()`: Galois Field $GF(2^8)$ multiplication.
-* `AddRoundKey()`: Bitwise XOR of the state with the current round key.
+## Repository Structure
 
-### RSA Base
-Implements the RSA (Rivest–Shamir–Adleman) algorithm, a popular asymmetric encryption and decryption method.
-* `generate_keys(p, q)`: Handles the Key Generation stage.
-* `encrypt(message)`: Encrypts the data using the Public Key to get the ciphertext.
-* `decrypt(ciphertext)`: Decrypts the ciphertext using the Private Key to get the original data.
-
-## Algorithm Explanation
-
-### RSA Algorithm
-The RSA algorithm is based on the factorization of large numbers and modular arithmetic. It involves the following steps:
-1. **Key Generation:** 
-   * Choose two large prime numbers, $p$ and $q$.
-   * Calculate their product, $n = p \times q$.
-   * Calculate the totient function $\Phi(n) = (p - 1) \times (q - 1)$.
-   * Choose an encryption exponent $e$ such that $1 < e < \Phi(n)$ and $e$ is co-prime with $\Phi(n)$.
-   * Calculate the decryption exponent $d$ such that $(d \times e) \equiv 1 \pmod{\Phi(n)}$.
-2. **Encryption:** The message $M$ is transformed into ciphertext $C$ using the formula $C = M^e \pmod n$ with the public key.
-3. **Decryption:** The ciphertext is then converted back into the plaintext message using $M = C^d \pmod n$ with the private key.
-
-## 📂 Repo Structure
-```
+```text
 .
-├── .devcontainer/         # Codespaces universal environment config
-├── shared/                # Standardized JSON test cases for AES and RSA (including intermediate states)
-├── scripts/               # BASH automation (e.g., run_all_tests.sh)
-├── python/                # Python implementations and unittests
-├── c/                     # C source files and GCC Makefiles
-├── go/                    # Go modules and _test.go files
-├── java/                  # Java source and JUnit tests
-└── javascript/            # Node.js implementation and Jest tests
+├── .devcontainer/         # Universal dev environment configuration
+├── shared/
+│   └── test-vectors.json  # Standardized JSON test vectors for AES and RSA
+├── scripts/
+│   └── run_all_tests.sh   # Unified multi-language test automation harness
+├── c/                     # C99 source files and strict GCC Makefile
+├── python/                # Pure Python modules and test runner
+├── go/                    # Go modules and zero-dependency test runner
+├── java/                  # JDK 17+ classes and JSON parser
+└── javascript/            # Node.js implementations and test runner
 ```
-## Installation & Usage
 
-### 1. Clone the repository
+## Mathematical Foundations
+
+### 1. AES-128 State Transformations
+AES processes a 128-bit state matrix ($4 \times 4$ byte grid) across 10 rounds:
+* **SubBytes:** Non-linear inversion over Galois Field $\text{GF}(2^8)$ followed by an affine mapping.
+* **ShiftRows:** Cyclical left row offsets: row $r$ shifts left by $r$ bytes ($r \in \{0, 1, 2, 3\}$).
+* **MixColumns:** Matrix multiplication transforming columns over the polynomial ring $\mathbb{Z}_2[x] / (x^4 + 1)$.
+* **AddRoundKey:** Bitwise XOR against round keys generated via the key schedule.
+
+### 2. RSA Modular Arithmetic
+RSA derives its security from the computational difficulty of factoring large composite primes in $\mathbb{Z}_n^*$:
+* **Key Relations:**
+  $$n = p \times q, \quad \phi(n) = (p - 1)(q - 1)$$
+  $$\gcd(e, \phi(n)) = 1, \quad d \cdot e \equiv 1 \pmod{\phi(n)}$$
+* **Encryption / Decryption:**
+  $$C \equiv M^e \pmod n \quad \Longleftrightarrow \quad M \equiv C^d \pmod n$$
+
+---
+
+## Quickstart
+
+### Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/polyglot-crypto.git](https://github.com/yourusername/polyglot-crypto.git)
+git clone [https://github.com/by-tayo/polyglot-crypto.git](https://github.com/by-tayo/polyglot-crypto.git)
 cd polyglot-crypto
 ```
 
-### 2. Example: C Implementation
-Compile the AES/RSA library and your program:
+### Run All Tests (One-Command Verification)
+
+Execute the unified test harness from the root directory to verify all 5 languages in sequence:
 
 ```bash
-cd c/
-gcc -c aes_core.c
-gcc main.c aes_core.o -o main
-./main
+chmod +x scripts/run_all_tests.sh
+./scripts/run_all_tests.sh
 ```
 
-3. Example: Python Implementation
+### Individual Language Execution
 
-Navigate to the Python directory to execute the code.
-Run the script directly using Python 3.
+### C (C99)
 
 ```bash
-cd python/
-python3 main.py
+cd c
+make clean && make test
 ```
 
-4. Example: Go Implementation
-
-Initialize the Go module to handle the package dependencies.
-Run the main Go file directly.
+### Python (3.8+)
 
 ```bash
-
-cd go/
-go mod init polyglot-crypto
-go run main.go
+cd python
+python3 test_runner.py
 ```
 
-5. Example: Java Implementation
-
-Navigate to your Java source folder to compile the files.
-Compile using javac and run the resulting class file.
+### Go (1.20+)
 
 ```bash
-cd java/
-javac Main.java
-java Main
+cd go
+go run src/main.go src/aes.go src/rsa.go
 ```
 
-6. Example: JavaScript (Node.js) Implementation
-
-Initialize npm to create your package configuration.
-Run the script using the Node environment.
+### JavaScript (Node.js)
 
 ```bash
-cd javascript/
-npm init -y
-node main.js
+cd javascript
+node test_runner.js
+```
+
+### Java (JDK 21+)
+
+```bash
+cd java
+javac -d bin src/*.java && java -cp bin Main && rm -rf bin
 ```
